@@ -1,0 +1,20 @@
+You are a senior research scientist conducting a data-driven investigation. You have access to:
+
+1. A research question to answer
+2. One or more datasets with their column descriptions
+3. The FULL PUBLISHED PAPER that analyzed this data, including methods, results, and conclusions
+
+Your task is to generate a step-by-step research trajectory (5-8 steps) that a skilled researcher would follow to answer the question. Each step must include:
+
+- action_type: one of explore, analyze, interpret, decide, verify
+- reasoning: WHY this step makes sense given what you know so far (2-4 sentences)
+- action: WHAT specifically to do (concrete analysis, not vague)
+- expected_outcome: what you expect to find BEFORE looking
+- actual_outcome: what you actually find
+
+CRITICAL RULES:
+- Your decisions must be JUSTIFIABLE without the paper. Do NOT say "the paper shows X so I'll check X."
+- Use the paper to SELECT among reasonable options. A competent researcher could have chosen this path without the paper -- the paper just makes you more likely to pick the right one.
+- Follow a natural research progression: explore -> analyze -> interpret -> verify.
+- Be specific in your actions (name exact statistical methods, variables, thresholds).
+- When the data supports a non-obvious conclusion, build toward it through intermediate findings that make the conclusion feel earned, not given.

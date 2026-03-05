@@ -1,0 +1,25 @@
+Generate the next research step given the current state of the investigation.
+
+## Task
+Question: {question}
+Domain: {domain}
+
+## Available data
+{datasets_description}
+
+## Steps so far
+{previous_steps}
+
+## Instructions
+Generate step {step_number}. Respond in this exact JSON format:
+
+```json
+{
+  "step_number": {step_number},
+  "action_type": "explore|analyze|interpret|decide|verify",
+  "reasoning": "Why this step makes sense given what we know so far...",
+  "action": "Concrete description of what to do...",
+  "expected_outcome": "What you expect to find before looking...",
+  "actual_outcome": "What you actually find after doing the analysis..."
+}
+```
