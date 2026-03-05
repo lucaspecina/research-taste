@@ -14,12 +14,12 @@ pip install -r requirements.txt
 # 3. Clonar datos de DiscoveryBench (si no esta)
 git clone https://github.com/allenai/discoverybench data/discoverybench
 
-# 4. Configurar Azure OpenAI
+# 4. Configurar Azure AI Foundry
 cp .env.example .env
 # Editar .env con tus credenciales:
-#   AZURE_API_BASE=https://<resource>.openai.azure.com
-#   AZURE_API_KEY=<key>
-#   LLM_MODEL=<deployment-name>  (ej: gpt-4.1)
+#   AZURE_OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/v1/
+#   AZURE_INFERENCE_CREDENTIAL=<api-key>
+#   LLM_MODEL=<deployment-name>  (ej: gpt-4.1, DeepSeek-V3.1)
 ```
 
 ## Pipeline
@@ -104,7 +104,7 @@ Con el `.env` configurado, podemos:
 
 ```
 src/
-  llm.py          # Cliente Azure OpenAI (async, retry, rate limiting)
+  llm.py          # Cliente Azure AI Foundry v1 API (async, retry, rate limiting)
   common.py       # Utilidades compartidas
   extract.py      # Extrae tareas de DiscoveryBench
   generate_privi.py / generate_base.py / generate_interleaved.py

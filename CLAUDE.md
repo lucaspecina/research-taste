@@ -28,7 +28,7 @@ This project generates preference training data for scientific decision-making b
 ## Tech stack
 
 - Python 3.11+ (conda env: `research-taste`)
-- openai SDK via Azure OpenAI (AsyncAzureOpenAI for all LLM calls)
+- openai SDK via Azure AI Foundry v1 API (AsyncOpenAI with base_url, no api_version)
 - pandas (for reading DiscoveryBench CSVs)
 - python-dotenv (for .env config)
 - json (trajectory storage)
@@ -175,16 +175,18 @@ The base's trajectory should:
 - Print progress to stdout, don't over-engineer logging
 - Each script should be runnable independently from `src/` or project root
 
-## Azure OpenAI conventions
+## Azure AI Foundry conventions (v1 API)
 
-- Client: `AsyncAzureOpenAI` (always async)
-- Auth: API key via `AZURE_API_KEY` env var
-- Endpoint: `AZURE_API_BASE` (sin trailing slash)
-- `model` param = deployment name in Azure, NOT model name
+- Client: `AsyncOpenAI` with `base_url` (NOT `AsyncAzureOpenAI`)
+- Base URL: `AZURE_OPENAI_BASE_URL` — e.g. `https://<resource>.openai.azure.com/openai/v1/`
+- Auth: API key via `AZURE_INFERENCE_CREDENTIAL`
+- No `api_version` needed (v1 API handles it automatically)
+- `model` param = deployment name in Foundry (e.g. `gpt-4.1`, `DeepSeek-V3.1`)
 - Use `max_completion_tokens` (not `max_tokens`)
 - Temperature: omit or set to 1.0
 - Rate limiting: `asyncio.Semaphore` in `src/llm.py`
 - Retry: exponential backoff (2^attempt seconds)
+- Works with any Foundry model: GPT, DeepSeek, Llama, Mistral, etc.
 
 ## Important: what NOT to do
 

@@ -89,3 +89,19 @@ Registro cronologico de cambios significativos. Formato: fecha, descripcion, arc
 - Todos los imports de `src/llm.py` y `src/common.py` funcionan correctamente
 - `extract_json` parsea JSON directo y en code blocks
 - Pipeline listo para testear con credenciales Azure OpenAI reales
+
+---
+
+## 2026-03-05 — Migracion a Azure AI Foundry v1 API
+
+### LLM client reescrito
+- `src/llm.py`: `AsyncAzureOpenAI` -> `AsyncOpenAI` con `base_url` (patron v1 recomendado por Microsoft)
+- Eliminada dependencia de `api_version` — v1 API no la necesita
+- Env vars renombradas: `AZURE_API_BASE` -> `AZURE_OPENAI_BASE_URL`, `AZURE_API_KEY` -> `AZURE_INFERENCE_CREDENTIAL`
+- Ahora compatible con cualquier modelo del catalogo Foundry (GPT, DeepSeek, Llama, etc.)
+
+### Archivos afectados
+- `src/llm.py` — cliente migrado a v1 API
+- `.env.example` — nuevas variables de entorno
+- `CLAUDE.md` — actualizada seccion de convenciones Azure
+- `README.md` — actualizado setup con nuevas env vars

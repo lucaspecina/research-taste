@@ -1,14 +1,13 @@
-"""Shared LLM client for Azure OpenAI.
+"""Shared LLM client for Azure AI Foundry (v1 API).
 
-All scripts use this module to call the LLM. Pattern: async client with
-semaphore-based rate limiting, retry with exponential backoff, and timeout.
+Uses AsyncOpenAI with base_url (recommended pattern, no api_version needed).
+Works with any model deployed in Foundry: GPT, DeepSeek, Llama, etc.
 
 Required env vars:
-    AZURE_API_BASE    - e.g. https://<resource>.openai.azure.com
-    AZURE_API_KEY     - secret key
-    AZURE_API_VERSION - optional, defaults to 2024-12-01-preview
-    LLM_MODEL         - deployment name in Azure (e.g. gpt-4.1)
-    LLM_MAX_CONCURRENT - max parallel calls (default 10)
+    AZURE_OPENAI_BASE_URL     - e.g. https://<resource>.openai.azure.com/openai/v1/
+    AZURE_INFERENCE_CREDENTIAL - API key for the Foundry resource
+    LLM_MODEL                  - deployment name (e.g. gpt-4.1, DeepSeek-V3.1)
+    LLM_MAX_CONCURRENT         - max parallel calls (default 10)
 """
 
 import asyncio
@@ -16,7 +15,7 @@ import json
 import os
 import re
 
-from openai import AsyncAzureOpenAI
+from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,10 +27,9 @@ _semaphore = None
 def get_client():
     global _client
     if _client is None:
-        _client = AsyncAzureOpenAI(
-            api_key=os.environ["AZURE_API_KEY"],
-            azure_endpoint=os.environ["AZURE_API_BASE"].rstrip("/"),
-            api_version=os.environ.get("AZURE_API_VERSION", "2024-12-01-preview"),
+        _client = AsyncOpenAI(
+            base_url=os.environ["AZURE_OPENAI_BASE_URL"],
+            api_key=os.environ["AZURE_INFERENCE_CREDENTIAL"],
         )
     return _client
 
@@ -56,7 +54,7 @@ async def call(
     max_retries: int = 3,
     timeout: float = 120.0,
 ) -> str:
-    """Call Azure OpenAI with retry, timeout, and rate limiting."""
+    """Call LLM via Azure Foundry v1 API with retry, timeout, and rate limiting."""
     client = get_client()
     semaphore = get_semaphore()
     model = get_model()
