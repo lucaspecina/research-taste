@@ -27,25 +27,28 @@ This project generates preference training data for scientific decision-making b
 
 ## Tech stack
 
-- Python 3.11+ (conda env: `research-taste`)
+- Python 3.12 (conda env: `yt_arenamiento` — shared env)
 - openai SDK via Azure AI Foundry v1 API (AsyncOpenAI with base_url, no api_version)
-- pandas (for reading DiscoveryBench CSVs)
+- pandas, numpy (data handling)
+- scipy, scikit-learn, statsmodels (statistical analysis in model-generated code)
 - python-dotenv (for .env config)
 - json (trajectory storage)
-- No ML frameworks yet — this is data generation only
+- Architecture aligned with synthetic-research-envs (SREG) project
 
 ## Key concepts
 
 - **privi**: the model instance that receives the full paper + data + question. It knows the answer.
 - **base**: the model instance that receives only data + question. It doesn't know the answer.
-- **trajectory**: a sequence of 5-8 research steps, each with reasoning, action, and outcome.
-- **fork**: a point where privi and base diverge from the same state. Creates a DPO preference pair.
-- **interleaved trajectory**: privi and base alternate steps. Base introduces "noise", privi recovers.
+- **trajectory**: a sequence of 5-8 research steps, each with reasoning, action, code execution, and real outcome.
+- **anchored pair**: privi runs a trajectory, then base is queried from the SAME state at each checkpoint. Creates clean DPO pairs.
+- **persistent namespace**: code execution uses a persistent Python namespace (like a Jupyter notebook). Variables from step 1 are available in step 3.
+- **TrajectoryRunner**: manages episode state (steps, messages, namespace, snapshots). Like SREG's EpisodeRunner.
+- **VerifierTool**: single authority for scoring decisions and trajectories. Like SREG's VerifierTool.
 
 ## Project structure
 
 ```
-research-taste/
+research-replay/
 ├── CLAUDE.md              # This file — instructions for Claude
 ├── PROJECT.md             # Full project description and motivation
 ├── TODO.md                # Task tracking (pendiente / en progreso / completado)
@@ -54,21 +57,32 @@ research-taste/
 ├── requirements.txt       # Python dependencies
 ├── data/
 │   ├── discoverybench/    # Clone of allenai/discoverybench
-│   ├── papers/            # Source paper text files
+│   ├── papers/            # Source paper text files (open access)
 │   └── tasks/             # Extracted task JSONs
 ├── src/
 │   ├── llm.py             # Shared Azure OpenAI client (async, retry, rate limit)
 │   ├── common.py          # Shared utilities (load task, build summaries, etc.)
+│   ├── python_exec.py     # Persistent Python namespace for code execution
+│   ├── trajectory_runner.py  # Episode state manager (like SREG EpisodeRunner)
+│   ├── verifier.py        # Scoring (like SREG VerifierTool)
 │   ├── extract.py         # Parse DiscoveryBench metadata into task objects
-│   ├── generate_privi.py  # Generate privileged trajectories via API
-│   ├── generate_base.py   # Generate base trajectories via API
-│   ├── generate_interleaved.py  # Alternating privi/base steps
-│   ├── extract_forks.py   # Find divergence points, create DPO pairs
-│   └── format_eval.py     # Blind and randomize pairs for human eval
+│   ├── generate_anchored.py  # Privi-anchored DPO pair generation (two-pass)
+│   ├── generate_privi.py  # Generate privileged trajectories (independent)
+│   ├── generate_base.py   # Generate base trajectories (independent)
+│   ├── generate_loop.py   # Shared semi-agentic loop (legacy)
+│   ├── generate_interleaved.py  # Alternating privi/base steps (legacy)
+│   ├── sandbox.py         # Code execution via subprocess (legacy, replaced by python_exec)
+│   ├── extract_forks.py   # Find divergence points from independent trajectories (legacy)
+│   ├── format_eval.py     # Blind and randomize pairs for human eval
+│   ├── format_dpo.py      # Export anchored pairs to TRL-compatible JSONL
+│   ├── render_anchored.py # Render anchored trajectories as readable Markdown
+│   └── training/
+│       ├── rubric.py      # Reward computation dispatcher
+│       └── env.py         # Stub for verifiers.StatefulToolEnv
 ├── prompts/
 │   ├── privi_system.txt   # System prompt for privileged model
 │   ├── base_system.txt    # System prompt for base model
-│   └── step_template.txt  # Template for each trajectory step
+│   └── step_agentic.txt   # Template for agentic step generation
 ├── trajectories/          # Generated trajectories (JSON)
 ├── eval/                  # Blinded pairs for human evaluation
 └── results/               # Human ratings
