@@ -1,0 +1,32 @@
+You are on step {step_number} of your investigation.
+
+## Research Question
+{question}
+
+## Available DataFrames (pre-loaded)
+{df_description}
+
+## Previous Steps and Results
+{previous_steps}
+
+## Instructions
+Propose the next research step. Return a JSON object:
+
+```json
+{{
+  "step_number": {step_number},
+  "action_type": "explore|analyze|interpret|decide|verify",
+  "reasoning": "Why this step makes sense given what you've seen so far...",
+  "action": "Natural language description of what to do...",
+  "code": "Python code that performs the analysis. Use the pre-loaded DataFrames. Print results to stdout.",
+  "expected_outcome": "What you expect to find before running the code..."
+}}
+```
+
+IMPORTANT:
+- Your code will be executed on the REAL data. The output you see will be real results.
+- Available libraries: pandas (as pd), numpy (as np), scipy.stats, sklearn, statsmodels.
+- The DataFrames are already loaded — do NOT load them yourself.
+- Always print() your results so they appear in stdout.
+- Keep output concise: summary stats, coefficients, p-values. Not full DataFrames.
+- Do NOT produce plots. Describe findings via print() instead.

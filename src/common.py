@@ -54,6 +54,21 @@ def save_json(data, path):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def build_df_description(task):
+    """Describe available DataFrames for the LLM prompt."""
+    datasets = task.get("datasets", [])
+    parts = []
+    for i, ds in enumerate(datasets):
+        var_name = "df" if len(datasets) == 1 else f"df_{i + 1}"
+        cols = ds.get("columns", {})
+        col_list = ", ".join(cols.keys())
+        desc = f"`{var_name}`: {ds['name']}"
+        if cols:
+            desc += f"\n  Columns: {col_list}"
+        parts.append(desc)
+    return "\n".join(parts)
+
+
 def format_steps(steps):
     """Format previous steps as text for prompts."""
     if not steps:

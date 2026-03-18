@@ -4,6 +4,40 @@ Registro cronologico de cambios significativos. Formato: fecha, descripcion, arc
 
 ---
 
+## 2026-03-18 — Semi-agentic pipeline + primer end-to-end
+
+### Cambio de paradigma: simulated -> semi-agentic
+- Las trayectorias ahora ejecutan codigo real sobre datos reales (antes el modelo inventaba los resultados)
+- Loop por paso: LLM propone analisis + escribe Python -> subprocess ejecuta en CSV real -> resultado real se devuelve al LLM
+- Ambos generadores (`generate_privi.py`, `generate_base.py`) soportan `--mode agentic` y `--mode simulated`
+
+### Archivos nuevos
+- `src/sandbox.py` — Ejecucion de codigo via subprocess con timeout, preamble auto-generado que carga DataFrames, sanitizacion de newlines escapados
+- `src/generate_loop.py` — Loop compartido semi-agentic usado por privi y base (multi-turn conversation con resultados reales)
+- `prompts/step_agentic.txt` — Template para pasos agentic (pide reasoning + action + code ejecutable)
+
+### Archivos modificados
+- `src/llm.py` — Agregada `call_messages()` para conversaciones multi-turn (message array)
+- `src/common.py` — Agregada `build_df_description()` para describir DataFrames disponibles en el prompt
+- `src/generate_privi.py` — Refactorizado: `--mode agentic` (default) usa generate_loop, `--mode simulated` mantiene comportamiento original
+- `src/generate_base.py` — Idem
+
+### Primer end-to-end exitoso (biology_fish)
+- Privi agentic: 6 pasos con codigo real, R²=0.925, MBL_evol coef mas alto
+- Base agentic: 6 pasos, incluyo variables circulares (R²=1.0), uso RF (inestable), conclusion ambigua
+- 4 forks extraidos con divergencias reales en juicio cientifico
+- Pares ciegos generados en `eval/biology_fish_pairs.json`
+
+### Hallazgos
+- gpt-5.4 escapa newlines como `\n` literal en campo `code` del JSON en ~50% de primeros pasos. Fix: `sanitize_code()` en sandbox.py
+- El mecanismo semi-agentic produce divergencias mucho mas ricas que el simulado: el privi elige hierarchical partitioning, el base usa RF feature importance
+- El base cometio error real (incluir BAMM_NetDiv como predictor → R²=1.0 circular) que nunca hubiera aparecido en modo simulado
+
+### Dependencias nuevas
+- scipy, scikit-learn, statsmodels (para que el codigo generado pueda hacer analisis estadisticos reales)
+
+---
+
 ## 2026-03-05 — Setup inicial del proyecto
 
 ### Estructura y scaffolding

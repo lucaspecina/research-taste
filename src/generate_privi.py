@@ -1,14 +1,21 @@
 """Generate a privileged trajectory for a task.
 
 The privi model receives: research question + dataset info + full paper text.
-It generates a 5-8 step research trajectory via Azure OpenAI.
 
 Usage:
+    # Agentic mode (executes code on real data):
     python src/generate_privi.py \
         --task data/tasks/biology_fish.json \
         --paper data/papers/cerezer2023.txt \
         --output trajectories/biology_fish/privi_1.json \
-        --steps 6
+        --steps 6 --mode agentic
+
+    # Simulated mode (original, no code execution):
+    python src/generate_privi.py \
+        --task data/tasks/biology_fish.json \
+        --paper data/papers/cerezer2023.txt \
+        --output trajectories/biology_fish/privi_1.json \
+        --steps 6 --mode simulated
 """
 
 import argparse
@@ -16,9 +23,11 @@ import asyncio
 
 from common import load_task, load_paper, load_prompt, build_dataset_summary, save_json
 from llm import call, extract_json, get_model
+from generate_loop import generate_trajectory_loop
 
 
-async def generate_trajectory(task, paper_text, num_steps):
+async def generate_trajectory_simulated(task, paper_text, num_steps):
+    """Original single-call simulated trajectory."""
     system_prompt = load_prompt("privi_system.txt")
     dataset_summary = build_dataset_summary(task)
     query = task["queries"][0]
@@ -60,12 +69,20 @@ Remember: your decisions must be justifiable WITHOUT the paper. Use the paper to
 """
 
     model = get_model()
-    print(f"Calling {model} (privi)...")
+    print(f"Calling {model} (privi, simulated)...")
     text = await call(prompt, system_prompt=system_prompt)
     result = extract_json(text)
     if result is None:
         raise ValueError(f"Failed to parse JSON from LLM response:\n{text[:500]}")
     return result
+
+
+async def generate_trajectory_agentic(task, paper_text, num_steps):
+    """Semi-agentic: LLM proposes code, we execute on real data, feed results back."""
+    system_prompt = load_prompt("privi_system.txt")
+    model = get_model()
+    print(f"Calling {model} (privi, agentic)...")
+    return await generate_trajectory_loop(task, system_prompt, paper_text, num_steps)
 
 
 def main():
@@ -74,17 +91,22 @@ def main():
     parser.add_argument("--paper", required=True, help="Path to paper text file")
     parser.add_argument("--output", required=True, help="Output trajectory JSON path")
     parser.add_argument("--steps", type=int, default=6, help="Number of steps (5-8)")
+    parser.add_argument("--mode", choices=["simulated", "agentic"], default="agentic")
     args = parser.parse_args()
 
     task = load_task(args.task)
     paper_text = load_paper(args.paper)
 
-    result = asyncio.run(generate_trajectory(task, paper_text, args.steps))
+    if args.mode == "agentic":
+        result = asyncio.run(generate_trajectory_agentic(task, paper_text, args.steps))
+    else:
+        result = asyncio.run(generate_trajectory_simulated(task, paper_text, args.steps))
 
     trajectory = {
         "task_id": task["task_id"],
         "model": get_model(),
         "mode": "privi",
+        "generation_mode": args.mode,
         "paper_in_context": True,
         "steps": result["steps"],
         "final_hypothesis": result.get("final_hypothesis", ""),

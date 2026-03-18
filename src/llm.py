@@ -84,6 +84,39 @@ async def call(
     raise RuntimeError(f"API call failed after {max_retries} retries: {last_error}")
 
 
+async def call_messages(
+    messages: list[dict],
+    max_tokens: int = 4096,
+    max_retries: int = 3,
+    timeout: float = 120.0,
+) -> str:
+    """Call LLM with a multi-turn message array."""
+    client = get_client()
+    semaphore = get_semaphore()
+    model = get_model()
+    last_error = None
+
+    for attempt in range(max_retries):
+        try:
+            async with semaphore:
+                response = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        max_completion_tokens=max_tokens,
+                    ),
+                    timeout=timeout,
+                )
+            return response.choices[0].message.content
+        except Exception as e:
+            last_error = e
+            print(f"  Attempt {attempt + 1}/{max_retries} failed: {e}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(2 ** attempt)
+
+    raise RuntimeError(f"API call failed after {max_retries} retries: {last_error}")
+
+
 def extract_json(response: str) -> dict | None:
     """Extract JSON from LLM response, handling code blocks and truncation."""
     # 1. JSON in code block

@@ -7,20 +7,18 @@ Tracking de tareas pendientes, en progreso y bloqueadas. Actualizar cada vez que
 ## En progreso
 
 - [ ] Reemplazar paper stub de Cerezer 2023 con texto completo del paper real
-- [ ] Configurar `.env` con credenciales Azure OpenAI reales
-
-## Pendiente — Pipeline core
-
-- [ ] Testear `generate_privi.py` con una tarea real
-- [ ] Testear `generate_base.py` con una tarea real
-- [ ] Testear `extract_forks.py` con par privi/base
-- [ ] Testear `generate_interleaved.py`
-- [ ] Testear `format_eval.py`
 
 ## Pendiente — Data
 
 - [ ] Obtener texto de paper para sociology_bmi
 - [ ] Obtener texto de paper para economics_immigration
+- [ ] Generar trayectorias agentic para sociology_bmi
+- [ ] Generar trayectorias agentic para economics_immigration
+
+## Pendiente — Pipeline
+
+- [ ] Adaptar `generate_interleaved.py` al modo agentic
+- [ ] Multiples runs por tarea (2-3 privi + 2-3 base) para medir varianza
 
 ## Pendiente — Evaluacion
 
@@ -29,6 +27,19 @@ Tracking de tareas pendientes, en progreso y bloqueadas. Actualizar cada vez que
 
 ## Completado
 
+- [x] Configurar `.env` con credenciales Azure AI Foundry
+- [x] Implementar modo semi-agentic (code execution en datos reales)
+- [x] Crear `src/sandbox.py` (ejecucion segura de codigo via subprocess)
+- [x] Crear `src/generate_loop.py` (loop compartido privi/base)
+- [x] Agregar `call_messages()` a `src/llm.py` (multi-turn)
+- [x] Agregar `build_df_description()` a `src/common.py`
+- [x] Crear `prompts/step_agentic.txt`
+- [x] Testear pipeline end-to-end agentic con biology_fish (privi + base + forks + eval)
+- [x] Generar trayectoria privi agentic biology_fish — divergencias reales encontradas
+- [x] Generar trayectoria base agentic biology_fish — comportamiento generico confirmado
+- [x] Extraer 4 fork pairs con divergencias significativas en juicio cientifico
+- [x] Formatear pares ciegos para evaluacion humana
+- [x] Fix bug de newlines escapados en codigo generado por LLM
 - [x] Crear estructura de directorios del proyecto
 - [x] Escribir prompts del sistema (privi, base, step template)
 - [x] Implementar `src/llm.py` (Azure OpenAI async client)
